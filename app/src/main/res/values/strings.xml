@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">Pic Encrypt</string>
+    <string name="select_algorithm">Select Encryption</string>
+    <string name="tomato_algorithm">🍅Tomato</string>
+    <string name="block_algorithm">Block</string>
+    <string name="row_pixel_algorithm">Row Pixel</string>
+    <string name="per_pixel_algorithm">Per Pixel</string>
+    <string name="pic_encrypt_row_pixel">PicEncrypt: Row Pixel</string>
+    <string name="pic_encrypt_row_and_column_pixel">PicEncrypt: Row+Column Pixel</string>
+    <string name="key_text_field_label">Key</string>
+    <string name="select_image_btn">Select Image</string>
+    <string name="encrypt_btn">Encrypt</string>
+    <string name="decrypt_btn">Decrypt</string>
+    <string name="reset_btn">Reset</string>
+    <string name="clear_btn">Clear</string>
+    <string name="save_btn">Save</string>
+    <string name="invalid_key_toast">PicEncrypt algorithm only accepts decimal between 0 and 1 (exclusive) as key</string>
+    <string name="succeeded_save_image_toast">Saved image to album</string>
+    <string name="failed_save_image_toast">Failed to save image</string>
+    <string name="start_encryption">Start encryption</string>
+    <string name="encryption_completed">Encryption completed</string>
+    <string name="start_decryption">Start decryption</string>
+    <string name="decryption_completed">Decryption completed</string>
+    <string name="start_saving">Start saving image</string>
+    <string name="file_not_found">File not found</string>
+    <string name="start_loading_images">Start loading images</string>
+    <string name="image_loading_completed">Image loading completed</string>
+</resources>

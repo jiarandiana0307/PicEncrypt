@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">图片混淆</string>
+    <string name="select_algorithm">选择混淆方法</string>
+    <string name="tomato_algorithm">🍅小番茄图片混淆</string>
+    <string name="block_algorithm">块混淆</string>
+    <string name="row_pixel_algorithm">行像素混淆</string>
+    <string name="per_pixel_algorithm">逐像素混淆</string>
+    <string name="pic_encrypt_row_pixel">兼容PicEncrypt: 行模式</string>
+    <string name="pic_encrypt_row_and_column_pixel">兼容PicEncrypt: 行+列模式</string>
+    <string name="key_text_field_label">密钥</string>
+    <string name="select_image_btn">选择图片</string>
+    <string name="encrypt_btn">混淆</string>
+    <string name="decrypt_btn">解混淆</string>
+    <string name="reset_btn">还原</string>
+    <string name="clear_btn">清空</string>
+    <string name="save_btn">保存</string>
+    <string name="invalid_key_toast">PicEncrypt算法仅支持0到1(不含0和1)的小数作为密钥</string>
+    <string name="succeeded_save_image_toast">成功保存图片到相册</string>
+    <string name="failed_save_image_toast">保存图片失败</string>
+    <string name="start_encryption">正在混淆</string>
+    <string name="encryption_completed">完成混淆</string>
+    <string name="start_decryption">正在解混淆</string>
+    <string name="decryption_completed">解混淆完成</string>
+    <string name="start_saving">正在保存图片</string>
+    <string name="file_not_found">文件不存在</string>
+    <string name="start_loading_images">正在加载图片</string>
+    <string name="image_loading_completed">图片加载完成</string>
+</resources>
