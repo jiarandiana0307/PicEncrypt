@@ -148,19 +148,29 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
         var thumbnail: Bitmap
 
         init {
-            val projection = arrayOf(
-                MediaStore.Images.Media.DISPLAY_NAME,
-                MediaStore.Images.Media.RELATIVE_PATH
-            )
-            val cursor =
-                context.contentResolver.query(uri, projection, null, null)
-            cursor?.moveToFirst()
-            val filenameIndex =
-                cursor?.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
-            filename = cursor?.getString(filenameIndex!!).toString()
-            cursor?.close()
+            filename = loadFilename()
             bitmap = BitmapFactory.decodeStream(context.contentResolver.openInputStream(uri))
             thumbnail = loadThumbnail()
+        }
+
+        fun loadFilename(): String {
+            val newFilename: String
+            val projection = arrayOf(
+                MediaStore.Images.Media.DISPLAY_NAME
+            )
+            val cursor =
+                context.contentResolver.query(uri, projection, null, null, null)
+            if (cursor != null) {
+                cursor.moveToFirst()
+                val filenameIndex =
+                    cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
+                newFilename = cursor.getString(filenameIndex).toString()
+                cursor.close()
+            } else {
+                newFilename = ""
+            }
+
+            return newFilename
         }
 
         fun loadThumbnail(): Bitmap {
@@ -190,17 +200,7 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
         }
 
         fun reload() {
-            val projection = arrayOf(
-                MediaStore.Images.Media.DISPLAY_NAME,
-                MediaStore.Images.Media.RELATIVE_PATH
-            )
-            val cursor =
-                context.contentResolver.query(uri, projection, null, null)
-            cursor?.moveToFirst()
-            val filenameIndex =
-                cursor?.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
-            filename = cursor?.getString(filenameIndex!!).toString()
-            cursor?.close()
+            filename = loadFilename()
             bitmap = BitmapFactory.decodeStream(context.contentResolver.openInputStream(uri))
             thumbnail = loadThumbnail()
         }
@@ -326,29 +326,31 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                 newImageUris.add(uri)
             }
 
-            Toast.makeText(
-                context,
-                context.getString(R.string.start_loading_images),
-                Toast.LENGTH_SHORT
-            ).show()
-            thread {
-                isShowProgress = true
-                progress = 0f
-                newImageUriCount = newImageUris.size
-                for (i in 0 until newImageUris.size) {
-                    images.add(MyImage(newImageUris[i]))
-                    progress = (i + 1).toFloat() / newImageUris.size
-                    update = !update
-                }
-                newImageUriCount = 0
-                isShowProgress = false
-                Looper.prepare()
+            if (newImageUris.size >= 1) {
                 Toast.makeText(
                     context,
-                    context.getString(R.string.image_loading_completed),
+                    context.getString(R.string.start_loading_images),
                     Toast.LENGTH_SHORT
                 ).show()
-                Looper.loop()
+                thread {
+                    isShowProgress = true
+                    progress = 0f
+                    newImageUriCount = newImageUris.size
+                    for (i in 0 until newImageUris.size) {
+                        images.add(MyImage(newImageUris[i]))
+                        progress = (i + 1).toFloat() / newImageUris.size
+                        update = !update
+                    }
+                    newImageUriCount = 0
+                    isShowProgress = false
+                    Looper.prepare()
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.image_loading_completed),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    Looper.loop()
+                }
             }
         }
     )
