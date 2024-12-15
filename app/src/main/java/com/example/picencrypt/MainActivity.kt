@@ -43,11 +43,13 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenuItem
@@ -305,6 +307,7 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
     var newImageUriCount by remember { mutableStateOf(0) }
     var progress by remember { mutableStateOf(0f) }
     var isShowProgress by remember { mutableStateOf(false) }
+    var isShowMethodAndKeySettingOnTopLayer by remember { mutableStateOf(false) }
     var update by remember { mutableStateOf(true) }
     var selectedAlgorithm by remember { mutableStateOf(Algorithm.TOMATO) }
     var keyString by remember { mutableStateOf("0.666") }
@@ -355,6 +358,88 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
         }
     )
 
+    @Composable
+    fun SetMethodAndKey(isExpanded: Boolean = true) {
+        val itemStringIds = arrayOf(
+            R.string.tomato_algorithm,
+            R.string.block_algorithm,
+            R.string.row_pixel_algorithm,
+            R.string.per_pixel_algorithm,
+            R.string.pic_encrypt_row_pixel,
+            R.string.pic_encrypt_row_and_column_pixel
+        )
+
+        ExposedDropdownMenuBox(
+            expanded = isDropdownMenuExpanded && isExpanded,
+            onExpandedChange = {
+                isDropdownMenuExpanded = !isDropdownMenuExpanded
+            },
+            modifier.padding(5.dp)
+        ) {
+            TextField(
+                value = stringResource(id = itemStringIds[selectedAlgorithm.ordinal]),
+                onValueChange = {},
+                readOnly = true,
+                singleLine = true,
+                label = { Text(text = stringResource(id = R.string.select_algorithm)) },
+                colors = TextFieldDefaults.textFieldColors(
+                    disabledTextColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent
+                ),
+                modifier = Modifier
+                    .menuAnchor()
+                    .clip(RoundedCornerShape(20.dp))
+            )
+            ExposedDropdownMenu(
+                expanded = isDropdownMenuExpanded && isExpanded,
+                onDismissRequest = { isDropdownMenuExpanded = false }
+            ) {
+                for (algorithm in Algorithm.values()) {
+                    val itemStringId = itemStringIds[algorithm.ordinal]
+                    DropdownMenuItem(
+                        text = { Text(text = stringResource(id = itemStringId)) },
+                        onClick = {
+                            selectedAlgorithm = algorithm
+                            isDropdownMenuExpanded = false
+                        }
+                    )
+                }
+            }
+        }
+
+        if (selectedAlgorithm != Algorithm.TOMATO) {
+            val keyboardType: KeyboardType =
+                if (isPicEncryptAlgorithm(selectedAlgorithm)) {
+                    KeyboardType.Decimal
+                } else {
+                    KeyboardType.Text
+                }
+
+            TextField(
+                value = keyString,
+                onValueChange = { keyString = it },
+                singleLine = true,
+                label = { Text(text = stringResource(id = R.string.key_text_field_label)) },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = keyboardType,
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+                colors = TextFieldDefaults.textFieldColors(
+                    disabledTextColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent
+                ),
+                modifier = Modifier
+                    .padding(vertical = 5.dp)
+                    .clip(RoundedCornerShape(20.dp))
+            )
+        }
+    }
+
     PicEncryptTheme {
         Surface(
             modifier = Modifier.fillMaxSize(),
@@ -376,13 +461,15 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                 }
             ) {
                 Box {
+                    Spacer(modifier = Modifier.height((if (update) 90 else 90).dp))
+
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = if (images.size > 0) Arrangement.Top else Arrangement.Center,
                         modifier = modifier
                             .fillMaxSize()
                             .verticalScroll(scrollState)
-                            .padding(0.dp, 0.dp, 0.dp, 100.dp)
+                            .padding(0.dp, 0.dp, 0.dp, 150.dp)
                             .pointerInput(key1 = null) {
                                 detectTapGestures(onTap = {
                                     focusManager.clearFocus()
@@ -404,84 +491,8 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                         }
 
                         if (images.size > 0) {
-                            val itemStringIds = arrayOf(
-                                R.string.tomato_algorithm,
-                                R.string.block_algorithm,
-                                R.string.row_pixel_algorithm,
-                                R.string.per_pixel_algorithm,
-                                R.string.pic_encrypt_row_pixel,
-                                R.string.pic_encrypt_row_and_column_pixel
-                            )
-
-                            ExposedDropdownMenuBox(
-                                expanded = isDropdownMenuExpanded,
-                                onExpandedChange = {
-                                    isDropdownMenuExpanded = !isDropdownMenuExpanded
-                                },
-                                modifier.padding(5.dp)
-                            ) {
-                                TextField(
-                                    value = stringResource(id = itemStringIds[selectedAlgorithm.ordinal]),
-                                    onValueChange = {},
-                                    readOnly = true,
-                                    singleLine = true,
-                                    label = { Text(text = stringResource(id = R.string.select_algorithm)) },
-                                    colors = TextFieldDefaults.textFieldColors(
-                                        disabledTextColor = Color.Transparent,
-                                        focusedIndicatorColor = Color.Transparent,
-                                        unfocusedIndicatorColor = Color.Transparent,
-                                        disabledIndicatorColor = Color.Transparent
-                                    ),
-                                    modifier = Modifier
-                                        .menuAnchor()
-                                        .clip(RoundedCornerShape(20.dp))
-                                )
-                                ExposedDropdownMenu(
-                                    expanded = isDropdownMenuExpanded,
-                                    onDismissRequest = { isDropdownMenuExpanded = false }
-                                ) {
-                                    for (algorithm in Algorithm.values()) {
-                                        val itemStringId = itemStringIds[algorithm.ordinal]
-                                        DropdownMenuItem(
-                                            text = { Text(text = stringResource(id = itemStringId)) },
-                                            onClick = {
-                                                selectedAlgorithm = algorithm
-                                                isDropdownMenuExpanded = false
-                                            }
-                                        )
-                                    }
-                                }
-                            }
-
-                            if (selectedAlgorithm != Algorithm.TOMATO) {
-                                val keyboardType: KeyboardType =
-                                    if (isPicEncryptAlgorithm(selectedAlgorithm)) {
-                                        KeyboardType.Decimal
-                                    } else {
-                                        KeyboardType.Text
-                                    }
-
-                                TextField(
-                                    value = keyString,
-                                    onValueChange = { keyString = it },
-                                    singleLine = true,
-                                    label = { Text(text = stringResource(id = R.string.key_text_field_label)) },
-                                    keyboardOptions = KeyboardOptions(
-                                        keyboardType = keyboardType,
-                                        imeAction = ImeAction.Done
-                                    ),
-                                    keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-                                    colors = TextFieldDefaults.textFieldColors(
-                                        disabledTextColor = Color.Transparent,
-                                        focusedIndicatorColor = Color.Transparent,
-                                        unfocusedIndicatorColor = Color.Transparent,
-                                        disabledIndicatorColor = Color.Transparent
-                                    ),
-                                    modifier = Modifier
-                                        .padding(vertical = 5.dp)
-                                        .clip(RoundedCornerShape(20.dp))
-                                )
-                            }
+                            val isEnableExpanded = !isShowMethodAndKeySettingOnTopLayer
+                            SetMethodAndKey(isEnableExpanded)
 
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -733,10 +744,37 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                                 modifier = Modifier.clip(CircleShape)
                                             ) {
                                                 Icon(
+                                                    Icons.Rounded.Settings,
+                                                    null,
+                                                    modifier = Modifier
+                                                        .clickable {
+                                                            isShowMethodAndKeySettingOnTopLayer = true
+                                                            update = !update
+                                                        }
+                                                        .padding(10.dp)
+                                                )
+                                            }
+
+                                            Row(
+                                                modifier = Modifier.clip(CircleShape)
+                                            ) {
+                                                Icon(
                                                     Icons.Rounded.ArrowBack,
                                                     null,
                                                     modifier = Modifier
                                                         .clickable {
+                                                            if (isPicEncryptAlgorithm(selectedAlgorithm) && !checkPicEncryptKeyValidity(
+                                                                    keyString
+                                                                )
+                                                            ) {
+                                                                Toast.makeText(
+                                                                    context,
+                                                                    context.getString(R.string.invalid_key_toast),
+                                                                    Toast.LENGTH_LONG
+                                                                ).show()
+                                                                return@clickable
+                                                            }
+
                                                             Toast
                                                                 .makeText(
                                                                     context,
@@ -765,6 +803,18 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                                     null,
                                                     modifier = Modifier
                                                         .clickable {
+                                                            if (isPicEncryptAlgorithm(selectedAlgorithm) && !checkPicEncryptKeyValidity(
+                                                                    keyString
+                                                                )
+                                                            ) {
+                                                                Toast.makeText(
+                                                                    context,
+                                                                    context.getString(R.string.invalid_key_toast),
+                                                                    Toast.LENGTH_LONG
+                                                                ).show()
+                                                                return@clickable
+                                                            }
+
                                                             Toast
                                                                 .makeText(
                                                                     context,
@@ -855,11 +905,33 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                     .background(Color(149, 117, 205, 255))
                             ) {
                                 Icon(
+                                    Icons.Rounded.Add,
+                                    null,
+                                    modifier = Modifier
+                                        .width(40.dp)
+                                        .height(40.dp)
+                                        .clickable {
+                                            launcher.launch(Intent(Intent.ACTION_GET_CONTENT).apply {
+                                                type = "image/*"
+                                                putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                                            })
+                                        }
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(20.dp))
+
+                            Row(
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .background(Color(149, 117, 205, 255))
+                            ) {
+                                Icon(
                                     Icons.Rounded.KeyboardArrowUp,
                                     null,
                                     modifier = Modifier
-                                        .width(50.dp)
-                                        .height(50.dp)
+                                        .width(40.dp)
+                                        .height(40.dp)
                                         .clickable {
                                             coroutineScope.launch {
                                                 scrollState.animateScrollTo(0, TweenSpec(800))
@@ -867,6 +939,21 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                         }
                                 )
                             }
+                        }
+                    }
+
+                    if (isShowMethodAndKeySettingOnTopLayer) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color(0, 0, 0, 180))
+                                .clickable {
+                                    isShowMethodAndKeySettingOnTopLayer = false
+                                }
+                        ) {
+                            SetMethodAndKey()
                         }
                     }
                 }
