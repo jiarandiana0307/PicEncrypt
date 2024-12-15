@@ -5,6 +5,7 @@ import android.content.ContentValues
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Matrix
 import android.media.ThumbnailUtils
 import android.net.Uri
 import android.os.Build
@@ -43,6 +44,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.ArrowForward
@@ -50,7 +53,6 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material.icons.rounded.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -201,6 +203,13 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
             thumbnail = loadThumbnail()
         }
 
+        fun rotate(degree: Float) {
+            val matrix = Matrix()
+            matrix.setRotate(degree)
+            bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+            thumbnail = loadThumbnail()
+        }
+
         fun reload() {
             filename = loadFilename()
             bitmap = BitmapFactory.decodeStream(context.contentResolver.openInputStream(uri))
@@ -308,6 +317,7 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
     var progress by remember { mutableStateOf(0f) }
     var isShowProgress by remember { mutableStateOf(false) }
     var isShowMethodAndKeySettingOnTopLayer by remember { mutableStateOf(false) }
+    var isShowInfo by remember { mutableStateOf(false) }
     var update by remember { mutableStateOf(true) }
     var selectedAlgorithm by remember { mutableStateOf(Algorithm.TOMATO) }
     var keyString by remember { mutableStateOf("0.666") }
@@ -454,7 +464,19 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                 painter = painterResource(id = R.mipmap.ic_launcher_foreground),
                                 contentDescription = null,
                                 contentScale = ContentScale.Crop,
-                                modifier = Modifier.size(80.dp)
+                                modifier = Modifier
+                                    .size(80.dp)
+                            )
+                        },
+                        actions = {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .padding(horizontal = 15.dp)
+                                    .clickable {
+                                        isShowInfo = !isShowInfo
+                                    }
                             )
                         }
                     )
@@ -611,40 +633,66 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                 }
                             }
 
-                            Button(
-                                onClick = {
-                                    Toast.makeText(
-                                        context,
-                                        context.getString(R.string.start_saving),
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-
-                                    thread {
-                                        isShowProgress = true
-                                        progress = 0f
-                                        for (i in 0 until images.size) {
-                                            images[i].save(i)
-                                            progress = (i + 1).toFloat() / images.size
-                                            update = !update
-                                        }
-                                        isShowProgress = false
-
-                                        Looper.prepare()
-                                        Toast.makeText(
-                                            context,
-                                            context.getString(R.string.succeeded_save_image_toast),
-                                            Toast.LENGTH_LONG
-                                        )
-                                            .show()
-                                        Looper.loop()
-                                    }
-
-                                },
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceEvenly,
                                 modifier = Modifier
-                                    .width(120.dp)
+                                    .fillMaxWidth()
                                     .padding(vertical = 5.dp)
                             ) {
-                                Text(text = stringResource(id = R.string.save_btn))
+                                Button(
+                                    onClick = {
+                                        thread {
+                                            isShowProgress = true
+                                            progress = 0f
+                                            for (i in 0 until images.size) {
+                                                images[i].rotate(180f)
+                                                progress = (i + 1).toFloat() / images.size
+                                                update = !update
+                                            }
+                                            isShowProgress = false
+                                        }
+                                    },
+                                    modifier = Modifier
+                                        .width(120.dp)
+                                ) {
+                                    Text(text = stringResource(id = R.string.rotate180_btn))
+                                }
+
+                                Button(
+                                    onClick = {
+                                        Toast.makeText(
+                                            context,
+                                            context.getString(R.string.start_saving),
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+
+                                        thread {
+                                            isShowProgress = true
+                                            progress = 0f
+                                            for (i in 0 until images.size) {
+                                                images[i].save(i)
+                                                progress = (i + 1).toFloat() / images.size
+                                                update = !update
+                                            }
+                                            isShowProgress = false
+
+                                            Looper.prepare()
+                                            Toast.makeText(
+                                                context,
+                                                context.getString(R.string.succeeded_save_image_toast),
+                                                Toast.LENGTH_LONG
+                                            )
+                                                .show()
+                                            Looper.loop()
+                                        }
+
+                                    },
+                                    modifier = Modifier
+                                        .width(120.dp)
+                                ) {
+                                    Text(text = stringResource(id = R.string.save_btn))
+                                }
                             }
 
                             if (isShowProgress) {
@@ -683,7 +731,7 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                     verticalArrangement = Arrangement.SpaceEvenly,
                                     modifier = Modifier
                                         .fillMaxWidth(0.95f)
-                                        .padding(0.dp, 0.dp, 0.dp, 10.dp)
+                                        .padding(0.dp, 0.dp, 0.dp, 15.dp)
                                         .clip(RoundedCornerShape(20.dp))
                                         .background(
                                             if (isSystemInDarkTheme()) Color(50, 50, 50)
@@ -748,7 +796,8 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                                     null,
                                                     modifier = Modifier
                                                         .clickable {
-                                                            isShowMethodAndKeySettingOnTopLayer = true
+                                                            isShowMethodAndKeySettingOnTopLayer =
+                                                                true
                                                             update = !update
                                                         }
                                                         .padding(10.dp)
@@ -763,15 +812,19 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                                     null,
                                                     modifier = Modifier
                                                         .clickable {
-                                                            if (isPicEncryptAlgorithm(selectedAlgorithm) && !checkPicEncryptKeyValidity(
+                                                            if (isPicEncryptAlgorithm(
+                                                                    selectedAlgorithm
+                                                                ) && !checkPicEncryptKeyValidity(
                                                                     keyString
                                                                 )
                                                             ) {
-                                                                Toast.makeText(
-                                                                    context,
-                                                                    context.getString(R.string.invalid_key_toast),
-                                                                    Toast.LENGTH_LONG
-                                                                ).show()
+                                                                Toast
+                                                                    .makeText(
+                                                                        context,
+                                                                        context.getString(R.string.invalid_key_toast),
+                                                                        Toast.LENGTH_LONG
+                                                                    )
+                                                                    .show()
                                                                 return@clickable
                                                             }
 
@@ -803,15 +856,19 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                                     null,
                                                     modifier = Modifier
                                                         .clickable {
-                                                            if (isPicEncryptAlgorithm(selectedAlgorithm) && !checkPicEncryptKeyValidity(
+                                                            if (isPicEncryptAlgorithm(
+                                                                    selectedAlgorithm
+                                                                ) && !checkPicEncryptKeyValidity(
                                                                     keyString
                                                                 )
                                                             ) {
-                                                                Toast.makeText(
-                                                                    context,
-                                                                    context.getString(R.string.invalid_key_toast),
-                                                                    Toast.LENGTH_LONG
-                                                                ).show()
+                                                                Toast
+                                                                    .makeText(
+                                                                        context,
+                                                                        context.getString(R.string.invalid_key_toast),
+                                                                        Toast.LENGTH_LONG
+                                                                    )
+                                                                    .show()
                                                                 return@clickable
                                                             }
 
@@ -839,6 +896,21 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                                 modifier = Modifier.clip(CircleShape)
                                             ) {
                                                 Icon(
+                                                    painterResource(id = R.drawable.crop_rotate_119243),
+                                                    null,
+                                                    modifier = Modifier
+                                                        .clickable {
+                                                            images[i].rotate(180f)
+                                                            update = !update
+                                                        }
+                                                        .padding(10.dp)
+                                                )
+                                            }
+
+                                            Row(
+                                                modifier = Modifier.clip(CircleShape)
+                                            ) {
+                                                Icon(
                                                     Icons.Rounded.Refresh,
                                                     null,
                                                     modifier = Modifier
@@ -854,7 +926,7 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                                 modifier = Modifier.clip(CircleShape)
                                             ) {
                                                 Icon(
-                                                    Icons.Rounded.ShoppingCart,
+                                                    painterResource(id = R.drawable.import_download_icon_176152),
                                                     null,
                                                     modifier = Modifier
                                                         .clickable {
@@ -954,6 +1026,83 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                 }
                         ) {
                             SetMethodAndKey()
+                        }
+                    }
+
+                    if (isShowInfo) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color(0, 0, 0, 180))
+                                .clickable(false) {}
+                        ) {
+
+                            Column(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .fillMaxWidth(0.8f)
+                                    .background(
+                                        if (isSystemInDarkTheme()) Color(
+                                            50,
+                                            50,
+                                            50
+                                        ) else Color(250, 250, 250)
+                                    )
+                            ) {
+                                Box(
+                                    contentAlignment = Alignment.TopCenter
+                                ) {
+                                    Column(
+                                        horizontalAlignment = Alignment.End,
+                                        verticalArrangement = Arrangement.Top,
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.clip(CircleShape)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Close,
+                                                contentDescription = null,
+                                                modifier = Modifier
+                                                    .clickable { isShowInfo = false }
+                                                    .padding(10.dp)
+                                            )
+                                        }
+                                    }
+
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                    ) {
+                                        Image(
+                                            painter = painterResource(id = R.mipmap.ic_launcher_foreground),
+                                            contentDescription = null,
+                                            contentScale = ContentScale.Crop,
+                                            modifier = Modifier
+                                                .padding(0.dp, 0.dp, 0.dp, 10.dp)
+                                                .size(80.dp)
+                                        )
+
+                                        Text(
+                                            text = stringResource(id = R.string.app_name),
+                                            modifier = Modifier.padding(0.dp, 0.dp, 0.dp, 10.dp)
+                                        )
+
+                                        Text(
+                                            text = "v${
+                                                context.packageManager.getPackageInfo(
+                                                    context.packageName,
+                                                    0
+                                                ).versionName
+                                            }",
+                                            modifier = Modifier.padding(0.dp, 0.dp, 0.dp, 10.dp)
+                                        )
+                                        
+                                        Spacer(modifier = Modifier.height(10.dp))
+                                    }
+                                }
+                            }
                         }
                     }
                 }

@@ -13,6 +13,7 @@
     <string name="decrypt_btn">Decrypt</string>
     <string name="reset_btn">Reset</string>
     <string name="clear_btn">Clear</string>
+    <string name="rotate180_btn">Rotate</string>
     <string name="save_btn">Save</string>
     <string name="invalid_key_toast">PicEncrypt algorithm only accepts decimal between 0 and 1 (exclusive) as key</string>
     <string name="succeeded_save_image_toast">Saved image to album</string>
