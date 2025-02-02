@@ -9,14 +9,22 @@ public class TomatoScramble extends ImageScramble {
 	private final int offset;
 	private int[] positions;
 	private int pos;
-	
+
 	public TomatoScramble(Image image) {
-		this(image.getPixels(), image.getWidth(), image.getHeight());
+		this(image, 1);
+	}
+
+	public TomatoScramble(int[] pixels, int width, int height) {
+		this(pixels, width, height, 1);
+	}
+
+	public TomatoScramble(Image image, double key) {
+		this(image.getPixels(), image.getWidth(), image.getHeight(), key);
 	}
 	
-	public TomatoScramble(int[] pixels, int width, int height) {
+	public TomatoScramble(int[] pixels, int width, int height, double key) {
 		super(pixels, width, height);
-		offset = (int) Math.round((Math.sqrt(5) - 1) / 2 * pixelCount);
+		offset = (int) Math.round((Math.sqrt(5) - 1) / 2 * pixelCount * key);
 	}
 	
 	@Override

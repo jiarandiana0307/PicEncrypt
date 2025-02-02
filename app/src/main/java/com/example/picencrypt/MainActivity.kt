@@ -115,6 +115,9 @@ enum class Algorithm {
     PIC_ENCRYPT_ROW_AND_COLUMN
 }
 
+const val defaultTomatoKey = 1
+const val defaultOtherKey = 0.666
+
 class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -125,8 +128,17 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-fun isPicEncryptAlgorithm(algorithm: Algorithm): Boolean {
-    return algorithm == Algorithm.PIC_ENCRYPT_ROW || algorithm == Algorithm.PIC_ENCRYPT_ROW_AND_COLUMN
+fun isTomatoOrPicEncryptAlgorithm(algorithm: Algorithm): Boolean {
+    return algorithm == Algorithm.TOMATO || algorithm == Algorithm.PIC_ENCRYPT_ROW || algorithm == Algorithm.PIC_ENCRYPT_ROW_AND_COLUMN
+}
+
+fun checkTomatoKeyValidity(key: String): Boolean {
+    try {
+        key.toDouble()
+    } catch (e: NumberFormatException) {
+        return false
+    }
+    return key.toDouble() > 0 && key.toDouble() <= 1.618
 }
 
 fun checkPicEncryptKeyValidity(key: String): Boolean {
@@ -192,7 +204,7 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
             bitmap.getPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
             var image = Image(pixels, bitmap.width, bitmap.height)
             image = when (algorithm) {
-                Algorithm.TOMATO -> TomatoScramble(image).process(processType)
+                Algorithm.TOMATO -> TomatoScramble(image, key.toDouble()).process(processType)
                 Algorithm.BLOCK -> BlockScramble(image, key).process(processType)
                 Algorithm.ROW_PIXEL -> RowPixelScramble(image, key).process(processType)
                 Algorithm.PER_PIXEL -> PerPixelScramble(image, key).process(processType)
@@ -320,7 +332,7 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
     var isShowInfo by remember { mutableStateOf(false) }
     var update by remember { mutableStateOf(true) }
     var selectedAlgorithm by remember { mutableStateOf(Algorithm.TOMATO) }
-    var keyString by remember { mutableStateOf("0.666") }
+    var keyString by remember { mutableStateOf("1") }
     var isDropdownMenuExpanded by remember { mutableStateOf(false) }
 
     val launcher = rememberLauncherForActivityResult(
@@ -411,6 +423,13 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                     DropdownMenuItem(
                         text = { Text(text = stringResource(id = itemStringId)) },
                         onClick = {
+                            if (selectedAlgorithm != algorithm) {
+                                if (algorithm == Algorithm.TOMATO) {
+                                    keyString = defaultTomatoKey.toString()
+                                } else if (selectedAlgorithm == Algorithm.TOMATO){
+                                    keyString = defaultOtherKey.toString()
+                                }
+                            }
                             selectedAlgorithm = algorithm
                             isDropdownMenuExpanded = false
                         }
@@ -419,35 +438,33 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
             }
         }
 
-        if (selectedAlgorithm != Algorithm.TOMATO) {
-            val keyboardType: KeyboardType =
-                if (isPicEncryptAlgorithm(selectedAlgorithm)) {
-                    KeyboardType.Decimal
-                } else {
-                    KeyboardType.Text
-                }
+        val keyboardType: KeyboardType =
+            if (isTomatoOrPicEncryptAlgorithm(selectedAlgorithm)) {
+                KeyboardType.Decimal
+            } else {
+                KeyboardType.Text
+            }
 
-            TextField(
-                value = keyString,
-                onValueChange = { keyString = it },
-                singleLine = true,
-                label = { Text(text = stringResource(id = R.string.key_text_field_label)) },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = keyboardType,
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-                colors = TextFieldDefaults.textFieldColors(
-                    disabledTextColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent
-                ),
-                modifier = Modifier
-                    .padding(vertical = 5.dp)
-                    .clip(RoundedCornerShape(20.dp))
-            )
-        }
+        TextField(
+            value = keyString,
+            onValueChange = { keyString = it },
+            singleLine = true,
+            label = { Text(text = stringResource(id = R.string.key_text_field_label)) },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = keyboardType,
+                imeAction = ImeAction.Done
+            ),
+            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+            colors = TextFieldDefaults.textFieldColors(
+                disabledTextColor = Color.Transparent,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                disabledIndicatorColor = Color.Transparent
+            ),
+            modifier = Modifier
+                .padding(vertical = 5.dp)
+                .clip(RoundedCornerShape(20.dp))
+        )
     }
 
     PicEncryptTheme {
@@ -525,13 +542,20 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                             ) {
 
                                 fun processImage(processType: ProcessType) {
-                                    if (isPicEncryptAlgorithm(selectedAlgorithm) && !checkPicEncryptKeyValidity(
-                                            keyString
-                                        )
-                                    ) {
+                                    val isValid = when (selectedAlgorithm) {
+                                        Algorithm.TOMATO -> checkTomatoKeyValidity(keyString)
+                                        in arrayOf(Algorithm.PIC_ENCRYPT_ROW, Algorithm.PIC_ENCRYPT_ROW_AND_COLUMN) -> checkPicEncryptKeyValidity(keyString)
+                                        else -> true
+                                    }
+                                    if (!isValid) {
+                                        val msg = if (selectedAlgorithm == Algorithm.TOMATO) {
+                                            context.getString(R.string.invalid_tomato_key_toast)
+                                        } else {
+                                            context.getString(R.string.invalid_picencrypt_key_toast)
+                                        }
                                         Toast.makeText(
                                             context,
-                                            context.getString(R.string.invalid_key_toast),
+                                            msg,
                                             Toast.LENGTH_LONG
                                         ).show()
                                         return
@@ -812,19 +836,22 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                                     null,
                                                     modifier = Modifier
                                                         .clickable {
-                                                            if (isPicEncryptAlgorithm(
-                                                                    selectedAlgorithm
-                                                                ) && !checkPicEncryptKeyValidity(
-                                                                    keyString
-                                                                )
-                                                            ) {
-                                                                Toast
-                                                                    .makeText(
-                                                                        context,
-                                                                        context.getString(R.string.invalid_key_toast),
-                                                                        Toast.LENGTH_LONG
-                                                                    )
-                                                                    .show()
+                                                            val isValid = when (selectedAlgorithm) {
+                                                                Algorithm.TOMATO -> checkTomatoKeyValidity(keyString)
+                                                                in arrayOf(Algorithm.PIC_ENCRYPT_ROW, Algorithm.PIC_ENCRYPT_ROW_AND_COLUMN) -> checkPicEncryptKeyValidity(keyString)
+                                                                else -> true
+                                                            }
+                                                            if (!isValid) {
+                                                                val msg = if (selectedAlgorithm == Algorithm.TOMATO) {
+                                                                    context.getString(R.string.invalid_tomato_key_toast)
+                                                                } else {
+                                                                    context.getString(R.string.invalid_picencrypt_key_toast)
+                                                                }
+                                                                Toast.makeText(
+                                                                    context,
+                                                                    msg,
+                                                                    Toast.LENGTH_LONG
+                                                                ).show()
                                                                 return@clickable
                                                             }
 
@@ -856,19 +883,22 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                                     null,
                                                     modifier = Modifier
                                                         .clickable {
-                                                            if (isPicEncryptAlgorithm(
-                                                                    selectedAlgorithm
-                                                                ) && !checkPicEncryptKeyValidity(
-                                                                    keyString
-                                                                )
-                                                            ) {
-                                                                Toast
-                                                                    .makeText(
-                                                                        context,
-                                                                        context.getString(R.string.invalid_key_toast),
-                                                                        Toast.LENGTH_LONG
-                                                                    )
-                                                                    .show()
+                                                            val isValid = when (selectedAlgorithm) {
+                                                                Algorithm.TOMATO -> checkTomatoKeyValidity(keyString)
+                                                                in arrayOf(Algorithm.PIC_ENCRYPT_ROW, Algorithm.PIC_ENCRYPT_ROW_AND_COLUMN) -> checkPicEncryptKeyValidity(keyString)
+                                                                else -> true
+                                                            }
+                                                            if (!isValid) {
+                                                                val msg = if (selectedAlgorithm == Algorithm.TOMATO) {
+                                                                    context.getString(R.string.invalid_tomato_key_toast)
+                                                                } else {
+                                                                    context.getString(R.string.invalid_picencrypt_key_toast)
+                                                                }
+                                                                Toast.makeText(
+                                                                    context,
+                                                                    msg,
+                                                                    Toast.LENGTH_LONG
+                                                                ).show()
                                                                 return@clickable
                                                             }
 

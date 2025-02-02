@@ -15,7 +15,8 @@
     <string name="clear_btn">清空</string>
     <string name="rotate180_btn">旋转180°</string>
     <string name="save_btn">保存</string>
-    <string name="invalid_key_toast">PicEncrypt算法仅支持0到1(不含0和1)的小数作为密钥</string>
+    <string name="invalid_tomato_key_toast">小番茄算法仅支持0到1.618的小数作为密钥</string>
+    <string name="invalid_picencrypt_key_toast">PicEncrypt算法仅支持0到1(不含0和1)的小数作为密钥</string>
     <string name="succeeded_save_image_toast">成功保存图片到相册</string>
     <string name="failed_save_image_toast">保存图片失败</string>
     <string name="start_encryption">正在混淆</string>

@@ -15,7 +15,8 @@
     <string name="clear_btn">Clear</string>
     <string name="rotate180_btn">Rotate</string>
     <string name="save_btn">Save</string>
-    <string name="invalid_key_toast">PicEncrypt algorithm only accepts decimal between 0 and 1 (exclusive) as key</string>
+    <string name="invalid_tomato_key_toast">Tomato algorithm only accepts decimal between 0 and 1.618 (exclusive) as key</string>
+    <string name="invalid_picencrypt_key_toast">PicEncrypt algorithm only accepts decimal between 0 and 1 (exclusive) as key</string>
     <string name="succeeded_save_image_toast">Saved image to album</string>
     <string name="failed_save_image_toast">Failed to save image</string>
     <string name="start_encryption">Start encryption</string>
