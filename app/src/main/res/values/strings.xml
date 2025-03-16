@@ -27,4 +27,6 @@
     <string name="file_not_found">File not found</string>
     <string name="start_loading_images">Start loading images</string>
     <string name="image_loading_completed">Image loading completed</string>
+    <string name="request_storage_permission_dialog_title">Storage Permission is required</string>
+    <string name="request_storage_permission_dialog_text">Please allow storage permission to save images to the gallery.</string>
 </resources>

@@ -27,4 +27,6 @@
     <string name="file_not_found">文件不存在</string>
     <string name="start_loading_images">正在加载图片</string>
     <string name="image_loading_completed">图片加载完成</string>
+    <string name="request_storage_permission_dialog_title">需要存储权限</string>
+    <string name="request_storage_permission_dialog_text">请允许存储权限以保存图片到相册。</string>
 </resources>

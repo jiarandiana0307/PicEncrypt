@@ -1,8 +1,10 @@
 package com.example.picencrypt
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.ContentValues
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
@@ -53,6 +55,7 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -88,6 +91,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.example.picencrypt.ui.theme.PicEncryptTheme
 import com.example.picencrypt.utils.BlockScramble
 import com.example.picencrypt.utils.ImageScramble.Image
@@ -334,6 +339,7 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
     var selectedAlgorithm by remember { mutableStateOf(Algorithm.TOMATO) }
     var keyString by remember { mutableStateOf("1") }
     var isDropdownMenuExpanded by remember { mutableStateOf(false) }
+    var isShowRequestWritePermissionDialog by remember { mutableStateOf(false) }
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult(),
@@ -499,6 +505,31 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                     )
                 }
             ) {
+                if (isShowRequestWritePermissionDialog) {
+                    AlertDialog(
+                        title = { Text(text = stringResource(id = R.string.request_storage_permission_dialog_title)) },
+                        text = { Text(text = stringResource(id = R.string.request_storage_permission_dialog_text)) },
+                        onDismissRequest = {},
+                        confirmButton = {
+                            Row(
+                                horizontalArrangement = Arrangement.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Button(onClick = {
+                                    ActivityCompat.requestPermissions(
+                                        context as Activity,
+                                        arrayOf("android.permission.WRITE_EXTERNAL_STORAGE"),
+                                        0
+                                    )
+                                    isShowRequestWritePermissionDialog = false
+                                }) {
+                                    Text("Confirm")
+                                }
+                            }
+                        }
+                    )
+                }
+
                 Box {
                     Spacer(modifier = Modifier.height((if (update) 90 else 90).dp))
 
@@ -577,11 +608,21 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                     thread {
                                         isShowProgress = true
                                         progress = 0f
-                                        for (i in 0 until images.size) {
-                                            images[i].process(selectedAlgorithm, processType, keyString)
-                                            progress = (i + 1).toFloat() / images.size
+                                        val tmpImages = images.clone() as ArrayList<MyImage>
+                                        for (i in 0 until tmpImages.size) {
+                                            if (images.contains(tmpImages[i])) {
+                                                try {
+                                                    tmpImages[i].process(
+                                                        selectedAlgorithm,
+                                                        processType,
+                                                        keyString
+                                                    )
+                                                } catch (_: Exception) {}
+                                            }
+                                            progress = (i + 1).toFloat() / tmpImages.size
                                             update = !update
                                         }
+                                        tmpImages.clear()
                                         isShowProgress = false
 
                                         Looper.prepare()
@@ -624,20 +665,24 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                         thread {
                                             isShowProgress = true
                                             progress = 0f
-                                            for (i in images.size - 1 downTo 0) {
-                                                try {
-                                                    images[i].reload()
-                                                } catch (e: FileNotFoundException) {
-                                                    images.removeAt(i)
-                                                    Toast.makeText(
-                                                        context,
-                                                        context.getString(R.string.file_not_found),
-                                                        Toast.LENGTH_SHORT
-                                                    ).show()
+                                            val tmpImages = images.clone() as ArrayList<MyImage>
+                                            for (i in tmpImages.size - 1 downTo 0) {
+                                                if (images.contains(tmpImages[i])) {
+                                                    try {
+                                                        tmpImages[i].reload()
+                                                    } catch (e: FileNotFoundException) {
+                                                        tmpImages.removeAt(i)
+                                                        Toast.makeText(
+                                                            context,
+                                                            context.getString(R.string.file_not_found),
+                                                            Toast.LENGTH_SHORT
+                                                        ).show()
+                                                    }
                                                 }
-                                                progress = (images.size - i).toFloat() / images.size
+                                                progress = (tmpImages.size - i).toFloat() / tmpImages.size
                                                 update = !update
                                             }
+                                            tmpImages.clear()
                                             isShowProgress = false
                                         }
                                     },
@@ -669,11 +714,15 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                         thread {
                                             isShowProgress = true
                                             progress = 0f
-                                            for (i in 0 until images.size) {
-                                                images[i].rotate(180f)
-                                                progress = (i + 1).toFloat() / images.size
+                                            val tmpImages = images.clone() as ArrayList<MyImage>
+                                            for (i in 0 until tmpImages.size) {
+                                                if (images.contains(tmpImages[i])) {
+                                                    images[i].rotate(180f)
+                                                }
+                                                progress = (i + 1).toFloat() / tmpImages.size
                                                 update = !update
                                             }
+                                            tmpImages.clear()
                                             isShowProgress = false
                                         }
                                     },
@@ -685,6 +734,13 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
 
                                 Button(
                                     onClick = {
+                                        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.P
+                                            && ContextCompat.checkSelfPermission(context, "android.permission.WRITE_EXTERNAL_STORAGE")
+                                            != PackageManager.PERMISSION_GRANTED) {
+                                            isShowRequestWritePermissionDialog = true
+                                            return@Button
+                                        }
+
                                         Toast.makeText(
                                             context,
                                             context.getString(R.string.start_saving),
@@ -694,11 +750,15 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                         thread {
                                             isShowProgress = true
                                             progress = 0f
-                                            for (i in 0 until images.size) {
-                                                images[i].save(i)
-                                                progress = (i + 1).toFloat() / images.size
+                                            val tmpImages = images.clone() as ArrayList<MyImage>
+                                            for (i in 0 until tmpImages.size) {
+                                                if (images.contains(tmpImages[i])) {
+                                                    tmpImages[i].save(i)
+                                                }
+                                                progress = (i + 1).toFloat() / tmpImages.size
                                                 update = !update
                                             }
+                                            tmpImages.clear()
                                             isShowProgress = false
 
                                             Looper.prepare()
@@ -837,21 +897,33 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                                     modifier = Modifier
                                                         .clickable {
                                                             val isValid = when (selectedAlgorithm) {
-                                                                Algorithm.TOMATO -> checkTomatoKeyValidity(keyString)
-                                                                in arrayOf(Algorithm.PIC_ENCRYPT_ROW, Algorithm.PIC_ENCRYPT_ROW_AND_COLUMN) -> checkPicEncryptKeyValidity(keyString)
+                                                                Algorithm.TOMATO -> checkTomatoKeyValidity(
+                                                                    keyString
+                                                                )
+
+                                                                in arrayOf(
+                                                                    Algorithm.PIC_ENCRYPT_ROW,
+                                                                    Algorithm.PIC_ENCRYPT_ROW_AND_COLUMN
+                                                                ) -> checkPicEncryptKeyValidity(
+                                                                    keyString
+                                                                )
+
                                                                 else -> true
                                                             }
                                                             if (!isValid) {
-                                                                val msg = if (selectedAlgorithm == Algorithm.TOMATO) {
-                                                                    context.getString(R.string.invalid_tomato_key_toast)
-                                                                } else {
-                                                                    context.getString(R.string.invalid_picencrypt_key_toast)
-                                                                }
-                                                                Toast.makeText(
-                                                                    context,
-                                                                    msg,
-                                                                    Toast.LENGTH_LONG
-                                                                ).show()
+                                                                val msg =
+                                                                    if (selectedAlgorithm == Algorithm.TOMATO) {
+                                                                        context.getString(R.string.invalid_tomato_key_toast)
+                                                                    } else {
+                                                                        context.getString(R.string.invalid_picencrypt_key_toast)
+                                                                    }
+                                                                Toast
+                                                                    .makeText(
+                                                                        context,
+                                                                        msg,
+                                                                        Toast.LENGTH_LONG
+                                                                    )
+                                                                    .show()
                                                                 return@clickable
                                                             }
 
@@ -884,21 +956,33 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                                     modifier = Modifier
                                                         .clickable {
                                                             val isValid = when (selectedAlgorithm) {
-                                                                Algorithm.TOMATO -> checkTomatoKeyValidity(keyString)
-                                                                in arrayOf(Algorithm.PIC_ENCRYPT_ROW, Algorithm.PIC_ENCRYPT_ROW_AND_COLUMN) -> checkPicEncryptKeyValidity(keyString)
+                                                                Algorithm.TOMATO -> checkTomatoKeyValidity(
+                                                                    keyString
+                                                                )
+
+                                                                in arrayOf(
+                                                                    Algorithm.PIC_ENCRYPT_ROW,
+                                                                    Algorithm.PIC_ENCRYPT_ROW_AND_COLUMN
+                                                                ) -> checkPicEncryptKeyValidity(
+                                                                    keyString
+                                                                )
+
                                                                 else -> true
                                                             }
                                                             if (!isValid) {
-                                                                val msg = if (selectedAlgorithm == Algorithm.TOMATO) {
-                                                                    context.getString(R.string.invalid_tomato_key_toast)
-                                                                } else {
-                                                                    context.getString(R.string.invalid_picencrypt_key_toast)
-                                                                }
-                                                                Toast.makeText(
-                                                                    context,
-                                                                    msg,
-                                                                    Toast.LENGTH_LONG
-                                                                ).show()
+                                                                val msg =
+                                                                    if (selectedAlgorithm == Algorithm.TOMATO) {
+                                                                        context.getString(R.string.invalid_tomato_key_toast)
+                                                                    } else {
+                                                                        context.getString(R.string.invalid_picencrypt_key_toast)
+                                                                    }
+                                                                Toast
+                                                                    .makeText(
+                                                                        context,
+                                                                        msg,
+                                                                        Toast.LENGTH_LONG
+                                                                    )
+                                                                    .show()
                                                                 return@clickable
                                                             }
 
@@ -960,6 +1044,18 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                                     null,
                                                     modifier = Modifier
                                                         .clickable {
+                                                            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.P
+                                                                && ContextCompat.checkSelfPermission(
+                                                                    context,
+                                                                    "android.permission.WRITE_EXTERNAL_STORAGE"
+                                                                )
+                                                                != PackageManager.PERMISSION_GRANTED
+                                                            ) {
+                                                                isShowRequestWritePermissionDialog =
+                                                                    true
+                                                                return@clickable
+                                                            }
+
                                                             Toast
                                                                 .makeText(
                                                                     context,
