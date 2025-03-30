@@ -341,6 +341,7 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
     var isDropdownMenuExpanded by remember { mutableStateOf(false) }
     var isShowRequestWritePermissionDialog by remember { mutableStateOf(false) }
 
+    // Select and add new images.
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult(),
         onResult = {
@@ -386,6 +387,7 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
         }
     )
 
+    // Show controls for algorithm selection and password input.
     @Composable
     fun SetMethodAndKey(isExpanded: Boolean = true) {
         val itemStringIds = arrayOf(
@@ -548,6 +550,7 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                     ) {
                         Spacer(modifier = Modifier.height((if (update) 90 else 90).dp))
 
+                        // Select new images.
                         Button(
                             onClick = {
                                 launcher.launch(Intent(Intent.ACTION_GET_CONTENT).apply {
@@ -564,6 +567,7 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                             val isEnableExpanded = !isShowMethodAndKeySettingOnTopLayer
                             SetMethodAndKey(isEnableExpanded)
 
+                            // Buttons for encryption and decryption
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceEvenly,
@@ -653,6 +657,7 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                 }
                             }
 
+                            // Buttons for Reset and Clear.
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceEvenly,
@@ -702,6 +707,7 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                 }
                             }
 
+                            // Buttons for rotation and saving.
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceEvenly,
@@ -779,6 +785,7 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                 }
                             }
 
+                            // Progress bar to show the progress of image processing.
                             if (isShowProgress) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
@@ -809,6 +816,7 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                 Spacer(modifier = Modifier.height(40.dp))
                             }
 
+                            // Show all of the added images.
                             for (i in 0 until images.size) {
                                 Column(
                                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -825,6 +833,7 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                     Box(
                                         modifier = Modifier.fillMaxSize()
                                     ) {
+                                        // Show file name and image.
                                         Column(
                                             horizontalAlignment = Alignment.CenterHorizontally,
                                             verticalArrangement = Arrangement.Center,
@@ -850,6 +859,8 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                                     )
                                             )
                                         }
+
+                                        // Buttons for operating every individual image.
                                         Column(
                                             horizontalAlignment = Alignment.End,
                                             verticalArrangement = Arrangement.Top,
@@ -857,6 +868,7 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                                 .fillMaxSize()
                                                 .padding(horizontal = 10.dp)
                                         ) {
+                                            // A Close button to remove the image from this App.
                                             Row(
                                                 modifier = Modifier.clip(CircleShape)
                                             ) {
@@ -872,6 +884,7 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                                 )
                                             }
 
+                                            // A Setting button to change algorithm and password.
                                             Row(
                                                 modifier = Modifier.clip(CircleShape)
                                             ) {
@@ -888,6 +901,7 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                                 )
                                             }
 
+                                            // A Decrypt button to decrypt the individual image.
                                             Row(
                                                 modifier = Modifier.clip(CircleShape)
                                             ) {
@@ -947,6 +961,7 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                                 )
                                             }
 
+                                            // An Encrypt button to encrypt the individual image.
                                             Row(
                                                 modifier = Modifier.clip(CircleShape)
                                             ) {
@@ -1006,6 +1021,7 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                                 )
                                             }
 
+                                            // A Rotate button to rotate the individual image 180 degrees.
                                             Row(
                                                 modifier = Modifier.clip(CircleShape)
                                             ) {
@@ -1021,6 +1037,8 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                                 )
                                             }
 
+                                            // A Reset button to restore the individual image
+                                            // back to its original appearance when added to this App.
                                             Row(
                                                 modifier = Modifier.clip(CircleShape)
                                             ) {
@@ -1036,6 +1054,7 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                                 )
                                             }
 
+                                            // A Save button to save the individual image to your phone.
                                             Row(
                                                 modifier = Modifier.clip(CircleShape)
                                             ) {
@@ -1090,6 +1109,7 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                     }
 
                     if (images.size > 0) {
+                        // Buttons pinned to the bottom right conner of the screen.
                         Column(
                             horizontalAlignment = Alignment.End,
                             verticalArrangement = Arrangement.Bottom,
@@ -1097,6 +1117,7 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                                 .fillMaxSize()
                                 .padding(30.dp)
                         ) {
+                            // A button to add new images.
                             Row(
                                 modifier = Modifier
                                     .clip(CircleShape)
@@ -1119,6 +1140,7 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
 
                             Spacer(modifier = Modifier.height(20.dp))
 
+                            // A button to scroll to the top.
                             Row(
                                 modifier = Modifier
                                     .clip(CircleShape)
@@ -1155,6 +1177,7 @@ fun PicEncrypt(modifier: Modifier = Modifier) {
                         }
                     }
 
+                    // Show information about the App.
                     if (isShowInfo) {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
